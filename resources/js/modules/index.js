@@ -23,16 +23,14 @@ export class FanChart
      * @param {String} selector The CSS selector of the HTML element used to assign the chart too
      * @param {Object} options  A list of options passed from outside to the application
      *
-     * @param {String[]}  options.labels
-     * @param {Number}    options.generations
-     * @param {Number}    options.fanDegree
-     * @param {String}    options.defaultColor
-     * @param {Number}    options.fontScale
-     * @param {String}    options.fontColor
-     * @param {Boolean}   options.hideEmptySegments
-     * @param {Boolean}   options.showColorGradients
-     * @param {Boolean}   options.rtl
-     * @param {Number}    options.innerArcs
+     * @param {String[]} options.labels
+     * @param {Number}   options.generations
+     * @param {Number}   options.fanDegree
+     * @param {Number}   options.fontScale
+     * @param {Boolean}  options.hideEmptySegments
+     * @param {Boolean}  options.showColorGradients
+     * @param {Boolean}  options.rtl
+     * @param {Number}   options.innerArcs
      */
     constructor(selector, options)
     {
@@ -44,9 +42,7 @@ export class FanChart
             options.labels,
             options.generations,
             options.fanDegree,
-            options.defaultColor,
             options.fontScale,
-            options.fontColor,
             options.hideEmptySegments,
             options.showColorGradients,
             options.showParentMarriageDates,

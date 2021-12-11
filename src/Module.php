@@ -12,8 +12,9 @@ use Aura\Router\RouterContainer;
 use Exception;
 use Fig\Http\Message\RequestMethodInterface;
 use Fisharebest\Webtrees\Auth;
-use Fisharebest\Webtrees\Exceptions\IndividualNotFoundException;
 use Fisharebest\Webtrees\Family;
+use Fisharebest\Webtrees\Http\Exceptions\HttpAccessDeniedException;
+use Fisharebest\Webtrees\Http\Exceptions\HttpNotFoundException;
 use Fisharebest\Webtrees\I18N;
 use Fisharebest\Webtrees\Individual;
 use Fisharebest\Webtrees\Module\AbstractModule;
@@ -21,6 +22,7 @@ use Fisharebest\Webtrees\Module\ModuleChartInterface;
 use Fisharebest\Webtrees\Module\ModuleCustomInterface;
 use Fisharebest\Webtrees\Module\ModuleThemeInterface;
 use Fisharebest\Webtrees\Registry;
+use Fisharebest\Webtrees\Tree;
 use Fisharebest\Webtrees\View;
 use MagicSunday\Webtrees\FanChart\Traits\IndividualTrait;
 use MagicSunday\Webtrees\FanChart\Traits\ModuleChartTrait;
@@ -137,20 +139,24 @@ class Module extends AbstractModule implements ModuleCustomInterface, ModuleChar
      * @param ServerRequestInterface $request
      *
      * @return ResponseInterface
-     * @throws Exception
+     *
+     * @throws HttpNotFoundException
+     * @throws HttpAccessDeniedException
      */
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $tree       = $request->getAttribute('tree');
-        $user       = $request->getAttribute('user');
-        $xref       = $request->getAttribute('xref');
+        $tree = $request->getAttribute('tree');
+        assert($tree instanceof Tree);
+
+        $xref = $request->getAttribute('xref');
+        assert(is_string($xref));
+
         $individual = Registry::individualFactory()->make($xref, $tree);
+        $individual = Auth::checkIndividualAccess($individual, false, true);
+
+        $user = $request->getAttribute('user');
 
         $this->configuration = new Configuration($request);
-
-        if ($individual === null) {
-            throw new IndividualNotFoundException();
-        }
 
         // Convert POST requests into GET requests for pretty URLs.
         // This also updates the name above the form, which wont get updated if only a POST request is used
@@ -170,7 +176,6 @@ class Module extends AbstractModule implements ModuleCustomInterface, ModuleChar
             ]));
         }
 
-        Auth::checkIndividualAccess($individual, false, true);
         Auth::checkComponentAccess($this, 'chart', $tree, $user);
 
         $ajaxUrl = route('module', [
@@ -225,10 +230,8 @@ class Module extends AbstractModule implements ModuleCustomInterface, ModuleChar
     private function getChartParameters(Individual $individual): array
     {
         return [
-            'rtl'          => I18N::direction() === 'rtl',
-            'defaultColor' => $this->getColor($individual),
-            'fontColor'    => $this->getChartFontColor(),
-            'labels'       => [
+            'rtl'    => I18N::direction() === 'rtl',
+            'labels' => [
                 'zoom' => I18N::translate('Use Ctrl + scroll to zoom in the view'),
                 'move' => I18N::translate('Move the view with two fingers'),
             ],
@@ -336,28 +339,5 @@ class Module extends AbstractModule implements ModuleCustomInterface, ModuleChar
         }
 
         return false;
-    }
-
-    /**
-     * Get the default colors based on the gender of an individual.
-     *
-     * @param null|Individual $individual Individual instance
-     *
-     * @return string HTML color code
-     */
-    private function getColor(?Individual $individual): string
-    {
-        $genderLower = ($individual === null) ? 'u' : strtolower($individual->sex());
-        return '#' . $this->theme->parameter('chart-background-' . $genderLower);
-    }
-
-    /**
-     * Get the theme defined chart font color.
-     *
-     * @return string HTML color code
-     */
-    private function getChartFontColor(): string
-    {
-        return '#' . $this->theme->parameter('chart-font-color');
     }
 }

@@ -201,7 +201,7 @@ export default class Person
             .append("g")
             .attr("class", "color");
 
-        color.append("path")
+        let path = color.append("path")
             .attr("fill", () => {
                 if (this._configuration.showColorGradients) {
                     // Innermost circle (first generation)
@@ -215,6 +215,13 @@ export default class Person
                 return data.data.color;
             })
             .attr("d", arcGenerator);
+
+        if (!this._configuration.showColorGradients) {
+            path.attr(
+                "class",
+                data.data.sex === SEX_FEMALE ? "female" : (data.data.sex === SEX_MALE ? "male" : "unknown")
+            );
+        }
     }
 
     /**

@@ -114,7 +114,6 @@ trait IndividualTrait
             'marriage'         => $this->getMarriageDate($individual),
             'timespan'         => $this->getLifetimeDescription($individual),
             'parentMarriage'   => $this->getParentMarriageDate($individual),
-            'color'            => $this->getColor($individual),
             'colors'           => [[], []],
         ];
     }
